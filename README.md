@@ -1,6 +1,6 @@
 # Room Booking Platform
 
-Small **Airbnb‑style room booking app** to show how I structure a full‑stack project.
+Small room booking app** to show how I structure a full‑stack project.
 
 - Backend: Node.js, Express, TypeScript, PostgreSQL, Redis  
 - Frontend: React, TypeScript, Vite, React Router
