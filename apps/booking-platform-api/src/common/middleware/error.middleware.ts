@@ -2,13 +2,14 @@ import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
+import { ErrorDefinitions } from "../errors/errorDefinitions";
 
 export function errorMiddleware(error: unknown, req: Request, res: Response, _next: NextFunction): void {
   if (error instanceof ZodError) {
     res.status(HttpStatusCode.BAD_REQUEST).json({
       error: {
-        code: "VALIDATION_ERROR",
-        message: "Request validation failed",
+        code: ErrorDefinitions.VALIDATION_ERROR.code,
+        message: ErrorDefinitions.VALIDATION_ERROR.message,
         details: error.flatten(),
         correlationId: req.correlationId,
       },
@@ -32,8 +33,8 @@ export function errorMiddleware(error: unknown, req: Request, res: Response, _ne
 
   res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
     error: {
-      code: "INTERNAL_SERVER_ERROR",
-      message: "An unexpected error occurred",
+      code: ErrorDefinitions.INTERNAL_SERVER_ERROR.code,
+      message: ErrorDefinitions.INTERNAL_SERVER_ERROR.message,
       correlationId: req.correlationId,
     },
   });

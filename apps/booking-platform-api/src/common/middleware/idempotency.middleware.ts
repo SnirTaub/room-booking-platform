@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-import { AppError } from "../errors/AppError";
-import { HttpStatusCode } from "../../config/constants";
+import { createAppError, ErrorCodes } from "../errors/errorDefinitions";
 import { redisClient } from "../../infrastructure/redis/redis";
 
 interface IdempotencyRecord {
@@ -19,21 +18,13 @@ export async function bookingIdempotencyMiddleware(req: Request, res: Response, 
   const idempotencyKeyHeader: string | undefined = req.header("Idempotency-Key");
 
   if (!idempotencyKeyHeader) {
-    throw new AppError({
-      statusCode: HttpStatusCode.BAD_REQUEST,
-      code: "MISSING_IDEMPOTENCY_KEY",
-      message: "Idempotency-Key header is required",
-    });
+    throw createAppError(ErrorCodes.MISSING_IDEMPOTENCY_KEY);
   }
 
   const userId: number | undefined = req.user?.userId;
 
   if (!userId) {
-    throw new AppError({
-      statusCode: HttpStatusCode.UNAUTHORIZED,
-      code: "UNAUTHORIZED",
-      message: "User must be authenticated",
-    });
+    throw createAppError(ErrorCodes.UNAUTHORIZED);
   }
 
   const requestHash: string = hashRequestBody(req.body);
@@ -44,11 +35,7 @@ export async function bookingIdempotencyMiddleware(req: Request, res: Response, 
     const parsedRecord: { requestHash: string; response: IdempotencyRecord } = JSON.parse(existingRecordRaw);
 
     if (parsedRecord.requestHash !== requestHash) {
-      throw new AppError({
-        statusCode: HttpStatusCode.CONFLICT,
-        code: "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD",
-        message: "This Idempotency-Key was already used with a different request payload",
-      });
+      throw createAppError(ErrorCodes.IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD);
     }
 
     res.status(parsedRecord.response.statusCode).json(parsedRecord.response.body);

@@ -1,5 +1,5 @@
-import { AppError } from "../../common/errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
+import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions";
 import { RoomDetailsDto, RoomSearchItemDto, RoomSearchRow, SearchRoomsQueryDto, SearchRoomsResponseDto } from "./rooms.types";
 import { roomsProvider } from "./rooms.provider";
 
@@ -34,10 +34,8 @@ export class RoomsService {
     const room = await this.provider.getRoomById(roomId);
 
     if (!room) {
-      throw new AppError({
+      throw createAppError(ErrorCodes.ROOM_NOT_FOUND, {
         statusCode: HttpStatusCode.NOT_FOUND,
-        code: "ROOM_NOT_FOUND",
-        message: "Room not found",
       });
     }
 

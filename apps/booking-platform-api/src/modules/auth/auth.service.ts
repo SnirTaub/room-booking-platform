@@ -1,9 +1,9 @@
-import { AppError } from "../../common/errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
 import { hashPassword, comparePassword } from "../../common/utils/password";
 import { signAccessToken } from "../../common/utils/jwt";
 import { LoginRequestDto, LoginResponseDto, RegisterRequestDto, RegisterResponseDto, UserRow } from "./auth.types";
 import { authProvider, AuthProvider } from "./auth.provider";
+import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions";
 
 export class AuthService {
   constructor(private readonly provider: AuthProvider = authProvider) {}
@@ -12,10 +12,8 @@ export class AuthService {
     const existingUser: UserRow | null = await this.provider.findUserByEmail(payload.email);
 
     if (existingUser) {
-      throw new AppError({
+      throw createAppError(ErrorCodes.EMAIL_ALREADY_EXISTS, {
         statusCode: HttpStatusCode.CONFLICT,
-        code: "EMAIL_ALREADY_EXISTS",
-        message: "A user with this email already exists",
       });
     }
 
@@ -23,10 +21,8 @@ export class AuthService {
     const createdUser: UserRow | null = await this.provider.insertUser(payload.email, passwordHash, payload.fullName);
 
     if (!createdUser) {
-      throw new AppError({
+      throw createAppError(ErrorCodes.USER_CREATION_FAILED, {
         statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
-        code: "USER_CREATION_FAILED",
-        message: "Failed to create user",
       });
     }
 
@@ -46,20 +42,16 @@ export class AuthService {
     const user: UserRow | null = await this.provider.findUserByEmail(payload.email);
 
     if (!user) {
-      throw new AppError({
+      throw createAppError(ErrorCodes.INVALID_CREDENTIALS, {
         statusCode: HttpStatusCode.UNAUTHORIZED,
-        code: "INVALID_CREDENTIALS",
-        message: "Invalid email or password",
       });
     }
 
     const isPasswordValid: boolean = await comparePassword(payload.password, user.password_hash);
 
     if (!isPasswordValid) {
-      throw new AppError({
+      throw createAppError(ErrorCodes.INVALID_CREDENTIALS, {
         statusCode: HttpStatusCode.UNAUTHORIZED,
-        code: "INVALID_CREDENTIALS",
-        message: "Invalid email or password",
       });
     }
 

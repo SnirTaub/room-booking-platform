@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../errors/AppError";
-import { HttpStatusCode } from "../../config/constants";
+import { createAppError, ErrorCodes } from "../errors/errorDefinitions";
 import { redisClient } from "../../infrastructure/redis/redis";
 
 interface RateLimitOptions {
@@ -28,13 +27,7 @@ export function rateLimitMiddleware(options: RateLimitOptions) {
       }
 
       if (currentCount > options.maxRequests) {
-        return next(
-          new AppError({
-            statusCode: HttpStatusCode.TOO_MANY_REQUESTS,
-            code: "RATE_LIMIT_EXCEEDED",
-            message: "Too many requests. Please try again later.",
-          })
-        );
+        return next(createAppError(ErrorCodes.RATE_LIMIT_EXCEEDED));
       }
 
       next();
