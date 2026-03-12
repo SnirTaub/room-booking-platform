@@ -2,6 +2,7 @@ import { QueryResult } from "pg";
 import { AppError } from "../../common/errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
 import { pgPool } from "../../infrastructure/db/pg";
+import { redisClient } from "../../infrastructure/redis/redis";
 import {
   CountRow,
   RoomDetailsDto,
@@ -12,9 +13,14 @@ import {
 } from "./rooms.types";
 
 export class RoomsService {
-  public async searchRooms(
-    query: SearchRoomsQueryDto
-  ): Promise<SearchRoomsResponseDto> {
+  public async searchRooms(query: SearchRoomsQueryDto): Promise<SearchRoomsResponseDto> {
+    const cacheKey: string = this.buildSearchCacheKey(query);
+    const cached: string | null = await redisClient.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached) as SearchRoomsResponseDto;
+    }
+
     const offset: number = (query.page - 1) * query.limit;
 
     const filterParams: unknown[] = [];
@@ -151,12 +157,11 @@ export class RoomsService {
       })
     );
 
-    return {
-      items,
-      page: query.page,
-      limit: query.limit,
-      total,
-    };
+    const response: SearchRoomsResponseDto = { items, page: query.page, limit: query.limit, total };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: 60 });
+
+    return response;
   }
 
   public async getRoomById(roomId: number): Promise<RoomDetailsDto> {
@@ -199,6 +204,20 @@ export class RoomsService {
       amenities: rowAmenities(room.amenities),
       status: room.status,
     };
+  }
+
+  private buildSearchCacheKey(query: SearchRoomsQueryDto): string {
+    const { location, capacity, startTime, endTime, amenities, page, limit } = query;
+
+    return `rooms:search:${JSON.stringify({
+      location: location ?? null,
+      capacity: capacity ?? null,
+      startTime,
+      endTime,
+      amenities: amenities ?? [],
+      page,
+      limit,
+    })}`;
   }
 }
 
