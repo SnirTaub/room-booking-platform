@@ -8,7 +8,7 @@ interface IdempotencyRecord {
   body: unknown;
 }
 
-const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10;
+const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10 // 10 minutes;
 
 function hashRequestBody(body: unknown): string {
   return crypto.createHash("sha256").update(JSON.stringify(body || {})).digest("hex");
