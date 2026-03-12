@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SearchRoomsPage } from "./pages/SearchRoomsPage";
-import { ProtectedRoute } from "./components/common/protectedRoute";
+import { ProtectedRoute } from "./components/common/ProtectedRoute";
 
 function App() {
   return (
