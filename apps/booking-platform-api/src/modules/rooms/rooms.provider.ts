@@ -1,0 +1,112 @@
+import { QueryResult } from "pg";
+import { pgPool } from "../../infrastructure/db/pg";
+import { redisClient } from "../../infrastructure/redis/redis";
+import { RoomSearchRow, RoomStatus, SearchRoomsQueryDto, SearchRoomsResponseDto } from "./rooms.types";
+
+const SEARCH_CACHE_TTL_SECONDS = 60;
+
+export class RoomsProvider {
+  public async getCachedSearch(key: string): Promise<SearchRoomsResponseDto | null> {
+    const raw = await redisClient.get(key);
+    if (!raw) {
+      return null;
+    }
+    return JSON.parse(raw) as SearchRoomsResponseDto;
+  }
+
+  public async setCachedSearch(key: string, value: SearchRoomsResponseDto, ttlSeconds: number = SEARCH_CACHE_TTL_SECONDS): Promise<void> {
+    await redisClient.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  }
+
+  public async searchRooms(query: SearchRoomsQueryDto): Promise<{ rows: RoomSearchRow[]; total: number }> {
+    const params = [
+      RoomStatus.ACTIVE,                                                   // $1
+      query.location || null,                                              // $2
+      query.capacity || null,                                              // $3
+      (query.amenities && query.amenities.length > 0 && query.amenities) || null, // $4
+      query.startTime,                                                     // $5
+      query.endTime,                                                       // $6
+      query.limit,                                                         // $7
+      (query.page - 1) * query.limit                                       // $8
+    ];
+
+    const sql = `
+      SELECT
+        r.id,
+        r.name,
+        r.location,
+        r.capacity,
+        r.status,
+        COALESCE(array_agg(DISTINCT ra.amenity) FILTER (WHERE ra.amenity IS NOT NULL), '{}') AS amenities,
+        NOT EXISTS (
+          SELECT 1
+          FROM bookings b
+          WHERE b.room_id = r.id
+            AND b.status = 'CONFIRMED'
+            AND b.start_time < $6::timestamptz
+            AND b.end_time   > $5::timestamptz
+        ) AS is_available,
+        COUNT(*) OVER() AS total_count
+      FROM rooms r
+      LEFT JOIN room_amenities ra ON ra.room_id = r.id
+      WHERE r.status = $1
+        AND ($2::text IS NULL OR r.location = $2::text)
+        AND ($3::int IS NULL OR r.capacity >= $3::int)
+        AND (
+          $4::text[] IS NULL OR NOT EXISTS (
+            SELECT 1
+            FROM unnest($4::text[]) AS required_amenity
+            WHERE required_amenity NOT IN (
+              SELECT ra2.amenity
+              FROM room_amenities ra2
+              WHERE ra2.room_id = r.id
+            )
+          )
+        )
+      GROUP BY r.id, r.name, r.location, r.capacity, r.status
+      ORDER BY r.id
+      LIMIT $7::int
+      OFFSET $8::int
+    `;
+
+    const result: QueryResult<RoomSearchRow & { total_count: string }> = await pgPool.query(sql, params);
+
+    const rows: RoomSearchRow[] = result.rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      location: row.location,
+      capacity: row.capacity,
+      status: row.status,
+      amenities: row.amenities,
+      is_available: row.is_available,
+    }));
+
+    const firstRow = result.rows[0];
+    const total: number = firstRow ? Number(firstRow.total_count) : 0;
+
+    return { rows, total };
+  }
+
+  public async getRoomById(roomId: number): Promise<RoomSearchRow | null> {
+    const result: QueryResult<RoomSearchRow> = await pgPool.query(
+      `
+      SELECT
+        r.id,
+        r.name,
+        r.location,
+        r.capacity,
+        r.status,
+        COALESCE(array_agg(DISTINCT ra.amenity) FILTER (WHERE ra.amenity IS NOT NULL), '{}') AS amenities,
+        TRUE AS is_available
+      FROM rooms r
+      LEFT JOIN room_amenities ra ON ra.room_id = r.id
+      WHERE r.id = $1
+      GROUP BY r.id, r.name, r.location, r.capacity, r.status
+      `,
+      [roomId]
+    );
+    return result.rows[0] ?? null;
+  }
+}
+
+export const roomsProvider = new RoomsProvider();

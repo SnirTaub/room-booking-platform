@@ -12,7 +12,7 @@ interface IdempotencyRecord {
 const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10;
 
 function hashRequestBody(body: unknown): string {
-  return crypto.createHash("sha256").update(JSON.stringify(body ?? {})).digest("hex");
+  return crypto.createHash("sha256").update(JSON.stringify(body || {})).digest("hex");
 }
 
 export async function bookingIdempotencyMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {

@@ -17,7 +17,7 @@ export class AuthService {
       [payload.email]
     );
 
-    if ((existingUserResult.rowCount ?? 0) > 0) {
+    if ((existingUserResult.rowCount || 0) > 0) {
       throw new AppError({
         statusCode: HttpStatusCode.CONFLICT,
         code: "EMAIL_ALREADY_EXISTS",
