@@ -43,27 +43,23 @@ export function useRoomSearch() {
   const [total, setTotal] = useState(0);
 
   const buildDatesOrSetError = useCallback((): { startIso: string; endIso: string } | null => {
-    setError("");
-    setSuccess("");
-
+    
     if (!checkIn || !checkOut) {
       setError("Please select both check-in and check-out.");
       return null;
     }
-
     const startIso = toIsoUtc(checkIn);
     const endIso = toIsoUtc(checkOut);
-
     if (!startIso || !endIso) {
       setError("Please enter valid dates and times.");
       return null;
     }
-
     if (new Date(startIso) >= new Date(endIso)) {
       setError("Check-out must be after check-in.");
       return null;
     }
-
+    
+    setError("");
     return { startIso, endIso };
   }, [checkIn, checkOut]);
 
