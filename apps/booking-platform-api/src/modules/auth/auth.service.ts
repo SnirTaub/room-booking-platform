@@ -1,23 +1,17 @@
-import { QueryResult } from "pg";
-import { pgPool } from "../../infrastructure/db/pg";
 import { AppError } from "../../common/errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
 import { hashPassword, comparePassword } from "../../common/utils/password";
 import { signAccessToken } from "../../common/utils/jwt";
 import { LoginRequestDto, LoginResponseDto, RegisterRequestDto, RegisterResponseDto, UserRow } from "./auth.types";
+import { authProvider, AuthProvider } from "./auth.provider";
 
 export class AuthService {
-  public async register(payload: RegisterRequestDto): Promise<RegisterResponseDto> {
-    const existingUserResult: QueryResult<UserRow> = await pgPool.query(
-      `
-      SELECT id, email, password_hash, full_name, created_at, updated_at
-      FROM users
-      WHERE email = $1
-      `,
-      [payload.email]
-    );
+  constructor(private readonly provider: AuthProvider = authProvider) {}
 
-    if ((existingUserResult.rowCount || 0) > 0) {
+  public async register(payload: RegisterRequestDto): Promise<RegisterResponseDto> {
+    const existingUser: UserRow | null = await this.provider.findUserByEmail(payload.email);
+
+    if (existingUser) {
       throw new AppError({
         statusCode: HttpStatusCode.CONFLICT,
         code: "EMAIL_ALREADY_EXISTS",
@@ -26,17 +20,7 @@ export class AuthService {
     }
 
     const passwordHash: string = await hashPassword(payload.password);
-
-    const insertResult: QueryResult<UserRow> = await pgPool.query(
-      `
-      INSERT INTO users (email, password_hash, full_name)
-      VALUES ($1, $2, $3)
-      RETURNING id, email, password_hash, full_name, created_at, updated_at
-      `,
-      [payload.email, passwordHash, payload.fullName]
-    );
-
-    const createdUser: UserRow | undefined = insertResult.rows[0];
+    const createdUser: UserRow | null = await this.provider.insertUser(payload.email, passwordHash, payload.fullName);
 
     if (!createdUser) {
       throw new AppError({
@@ -46,10 +30,7 @@ export class AuthService {
       });
     }
 
-    const accessToken: string = signAccessToken({
-      userId: createdUser.id,
-      email: createdUser.email,
-    });
+    const accessToken: string = signAccessToken({ userId: createdUser.id, email: createdUser.email });
 
     return {
       user: {
@@ -62,16 +43,7 @@ export class AuthService {
   }
 
   public async login(payload: LoginRequestDto): Promise<LoginResponseDto> {
-    const userResult: QueryResult<UserRow> = await pgPool.query(
-      `
-      SELECT id, email, password_hash, full_name, created_at, updated_at
-      FROM users
-      WHERE email = $1
-      `,
-      [payload.email]
-    );
-
-    const user: UserRow | undefined = userResult.rows[0];
+    const user: UserRow | null = await this.provider.findUserByEmail(payload.email);
 
     if (!user) {
       throw new AppError({
@@ -81,10 +53,7 @@ export class AuthService {
       });
     }
 
-    const isPasswordValid: boolean = await comparePassword(
-      payload.password,
-      user.password_hash
-    );
+    const isPasswordValid: boolean = await comparePassword(payload.password, user.password_hash);
 
     if (!isPasswordValid) {
       throw new AppError({
@@ -94,10 +63,7 @@ export class AuthService {
       });
     }
 
-    const accessToken: string = signAccessToken({
-      userId: user.id,
-      email: user.email,
-    });
+    const accessToken: string = signAccessToken({ userId: user.id, email: user.email });
 
     return { accessToken };
   }
