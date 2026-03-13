@@ -2,24 +2,39 @@ import { PoolClient, QueryResult } from "pg";
 import { pgPool } from "../../infrastructure/db/pg";
 import { BookingStatus, CreateBooking, BookingResponse } from "./bookings.types";
 import { RoomStatus } from "../rooms/rooms.types";
+import { logger } from "../../common/utils/logger";
 
 export class BookingsProvider {
-  public async runInTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  public async runInTransaction<T>(correlationId: string, fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    const methodName = "BookingsProvider/runInTransaction";
+
+    logger.info(correlationId, `${methodName} - start`);
+
     const client: PoolClient = await pgPool.connect();
     try {
       await client.query("BEGIN");
       const result = await fn(client);
       await client.query("COMMIT");
+
+      logger.info(correlationId, `${methodName} - end - result: transaction committed`);
+
       return result;
     } catch (error) {
       await client.query("ROLLBACK");
+
+      logger.error(correlationId, `${methodName} - error: transaction rolled back`, { error: error instanceof Error ? error.message : String(error) });
+
       throw error;
     } finally {
       client.release();
     }
   }
 
-  public async lockActiveRoom(client: PoolClient, roomId: number): Promise<boolean> {
+  public async lockActiveRoom(correlationId: string, client: PoolClient, roomId: number): Promise<boolean> {
+    const methodName = "BookingsProvider/lockActiveRoom";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { roomId: roomId });
+
     const result: QueryResult = await client.query(
       `
       SELECT id
@@ -30,10 +45,18 @@ export class BookingsProvider {
       `,
       [roomId, RoomStatus.ACTIVE]
     );
-    return (result.rowCount || 0) > 0;
+    const found: boolean = (result.rowCount || 0) > 0;
+
+    logger.info(correlationId, `${methodName} - end - result: room lock attempted`, { roomId: roomId, locked: found });
+
+    return found;
   }
 
-  public async hasOverlappingBooking(client: PoolClient, roomId: number, startTime: string, endTime: string): Promise<boolean> {
+  public async hasOverlappingBooking(correlationId: string, client: PoolClient, roomId: number, startTime: string, endTime: string): Promise<boolean> {
+    const methodName = "BookingsProvider/hasOverlappingBooking";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { roomId: roomId, startTime: startTime, endTime: endTime });
+
     const result: QueryResult = await client.query(
       `
       SELECT id
@@ -46,10 +69,23 @@ export class BookingsProvider {
       `,
       [roomId, startTime, endTime, BookingStatus.CONFIRMED]
     );
-    return (result.rowCount || 0) > 0;
+    const hasOverlap: boolean = (result.rowCount || 0) > 0;
+
+    logger.info(correlationId, `${methodName} - end - result: overlap check`, { roomId: roomId, startTime: startTime, endTime: endTime, hasOverlap: hasOverlap });
+
+    return hasOverlap;
   }
 
-  public async insertBooking(client: PoolClient, userId: number, booking: CreateBooking): Promise<BookingResponse> {
+  public async insertBooking(
+    correlationId: string,
+    client: PoolClient,
+    userId: number,
+    booking: CreateBooking
+  ): Promise<BookingResponse> {
+    const methodName = "BookingsProvider/insertBooking";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { userId: userId, roomId: booking.roomId, startTime: booking.startTime, endTime: booking.endTime });
+
     const result: QueryResult = await client.query(
       `
       INSERT INTO bookings (user_id, room_id, start_time, end_time, status)
@@ -60,7 +96,7 @@ export class BookingsProvider {
     );
 
     const row = result.rows[0];
-    return {
+    const bookingRow: BookingResponse = {
       id: Number(row.id),
       roomId: Number(row.room_id),
       userId: Number(row.user_id),
@@ -68,6 +104,10 @@ export class BookingsProvider {
       endTime: row.end_time,
       status: row.status,
     };
+
+    logger.info(correlationId, `${methodName} - end - result: booking inserted`, { bookingId: bookingRow.id, roomId: bookingRow.roomId, userId: bookingRow.userId });
+
+    return bookingRow;
   }
 }
 

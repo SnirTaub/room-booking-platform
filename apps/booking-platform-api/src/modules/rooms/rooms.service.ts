@@ -3,19 +3,25 @@ import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions
 import { getFromCache, setInCache } from "../../infrastructure/redis/redis";
 import { RoomDetails, RoomSearchItem, RoomSearchRow, SearchRoomsQuery, SearchRoomsResponse } from "./rooms.types";
 import { roomsProvider } from "./rooms.provider";
+import { logger } from "../../common/utils/logger";
 
 export class RoomsService {
   constructor(private readonly provider = roomsProvider) {}
 
-  public async searchRooms(query: SearchRoomsQuery): Promise<SearchRoomsResponse> {
+  public async searchRooms(correlationId: string, query: SearchRoomsQuery): Promise<SearchRoomsResponse> {
+    const methodName = "RoomsService/searchRooms";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
+
     const cacheKey = this.buildSearchCacheKey(query);
 
     const cached = await getFromCache<SearchRoomsResponse>(cacheKey);
     if (cached) {
+      logger.info(correlationId, `${methodName} - end - result: cache hit`, { page: cached.page, limit: cached.limit, total: cached.total });
       return cached;
     }
 
-    const { rows, total } = await this.provider.searchRooms(query);
+    const { rows, total } = await this.provider.searchRooms(correlationId, query);
 
     const response: SearchRoomsResponse = {
       items: rows.map((row) => this.mapRowToSearchItem(row)),
@@ -26,19 +32,31 @@ export class RoomsService {
 
     await setInCache(cacheKey, response, SEARCH_CACHE_TTL_SECONDS);
 
+    logger.info(correlationId, `${methodName} - end - result: rooms fetched`, { page: response.page, limit: response.limit, total: response.total });
+
     return response;
   }
 
-  public async getRoomById(roomId: number): Promise<RoomDetails> {
-    const room = await this.provider.getRoomById(roomId);
+  public async getRoomById(correlationId: string, roomId: number): Promise<RoomDetails> {
+    const methodName = "RoomsService/getRoomById";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { roomId: roomId });
+
+    const room = await this.provider.getRoomById(correlationId, roomId);
 
     if (!room) {
+      logger.error(correlationId, `${methodName} - error: room not found`, { roomId: roomId });
+
       throw createAppError(ErrorCodes.ROOM_NOT_FOUND, {
         statusCode: HttpStatusCode.NOT_FOUND,
       });
     }
 
-    return this.mapRowToDetails(room);
+    const details = this.mapRowToDetails(room);
+
+    logger.info(correlationId, `${methodName} - end - result: room fetched`, { roomId: details.id, location: details.location, capacity: details.capacity });
+
+    return details;
   }
 
   private buildSearchCacheKey(query: SearchRoomsQuery): string {

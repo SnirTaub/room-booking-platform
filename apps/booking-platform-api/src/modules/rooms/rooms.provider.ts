@@ -1,9 +1,13 @@
 import { QueryResult } from "pg";
 import { pgPool } from "../../infrastructure/db/pg";
 import { RoomSearchRow, RoomStatus, SearchRoomsQuery } from "./rooms.types";
+import { logger } from "../../common/utils/logger";
 
 export class RoomsProvider {
-  public async searchRooms(query: SearchRoomsQuery): Promise<{ rows: RoomSearchRow[]; total: number }> {
+  public async searchRooms(correlationId: string, query: SearchRoomsQuery): Promise<{ rows: RoomSearchRow[]; total: number }> {
+    const methodName = "RoomsProvider/searchRooms";
+    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
+
     const params = [
       RoomStatus.ACTIVE,                                                   // $1
       query.location || null,                                              // $2
@@ -69,10 +73,16 @@ export class RoomsProvider {
     const firstRow = result.rows[0];
     const total: number = firstRow ? Number(firstRow.total_count) : 0;
 
+    logger.info(correlationId, `${methodName} - end - result: rooms fetched`, { page: query.page, limit: query.limit, total: total });
+
     return { rows, total };
   }
 
-  public async getRoomById(roomId: number): Promise<RoomSearchRow | null> {
+  public async getRoomById(correlationId: string, roomId: number): Promise<RoomSearchRow | null> {
+    const methodName = "RoomsProvider/getRoomById";
+
+    logger.info(correlationId, `${methodName} - start - input parameters`, { roomId: roomId });
+
     const result: QueryResult<RoomSearchRow> = await pgPool.query(
       `
       SELECT
@@ -90,7 +100,11 @@ export class RoomsProvider {
       `,
       [roomId]
     );
-    return result.rows[0] || null;
+    const room: RoomSearchRow | null = result.rows[0] || null;
+
+    logger.info(correlationId, `${methodName} - end - result: room fetched`, { roomId: roomId, found: Boolean(room) });
+
+    return room;
   }
 }
 

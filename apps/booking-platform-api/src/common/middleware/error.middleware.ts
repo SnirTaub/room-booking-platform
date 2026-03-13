@@ -3,9 +3,17 @@ import { ZodError } from "zod";
 import { AppError } from "../errors/AppError";
 import { HttpStatusCode } from "../../config/constants";
 import { ErrorDefinitions } from "../errors/errorDefinitions";
+import { logger } from "../utils/logger";
 
 export function errorMiddleware(error: unknown, req: Request, res: Response, _next: NextFunction): void {
+  const methodName = "errorMiddleware";
+
   if (error instanceof ZodError) {
+    logger.error(req.correlationId, `${methodName} - error: validation error`, {
+      error: error.flatten(),
+      path: req.path,
+      method: req.method,
+    });
     res.status(HttpStatusCode.BAD_REQUEST).json({
       error: {
         code: ErrorDefinitions.VALIDATION_ERROR.code,
@@ -18,6 +26,14 @@ export function errorMiddleware(error: unknown, req: Request, res: Response, _ne
   }
 
   if (error instanceof AppError) {
+    logger.error(req.correlationId, `${methodName} - error: handled AppError`, {
+      code: error.code,
+      statusCode: error.statusCode,
+      details: error.details,
+      path: req.path,
+      method: req.method,
+    });
+
     res.status(error.statusCode).json({
       error: {
         code: error.code,
@@ -29,7 +45,11 @@ export function errorMiddleware(error: unknown, req: Request, res: Response, _ne
     return;
   }
 
-  console.error("Unhandled error:", error);
+  logger.error(req.correlationId, `${methodName} - error: unhandled error`, {
+    error,
+    path: req.path,
+    method: req.method,
+  });
 
   res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({
     error: {
