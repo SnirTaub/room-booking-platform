@@ -8,7 +8,7 @@ export class BookingsService {
   constructor(private readonly provider = bookingsProvider) {}
 
   public async createBooking(userId: number, booking: CreateBooking): Promise<BookingResponse> {
-    const createdBooking = await this.provider.runInTransaction(async (client) => {
+    const createdBooking: BookingResponse = await this.provider.runInTransaction(async (client) => {
       const roomLocked: boolean = await this.provider.lockActiveRoom(client, booking.roomId);
       if (!roomLocked) {
         throw createAppError(ErrorCodes.ROOM_NOT_FOUND, {

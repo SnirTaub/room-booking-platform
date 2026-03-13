@@ -14,7 +14,7 @@ bookingsRouter.post("/",
     keyPrefix: RATE_LIMIT_BOOKINGS_CREATE_PREFIX,
     windowInSeconds: 60,
     maxRequests: 10,
-    keyGenerator: (req) => req.user?.userId.toString() ?? req.ip ?? "unknown",
+    keyGenerator: (req) => req.user?.userId.toString() || req.ip || "unknown",
   }),
   asyncHandler(bookingIdempotencyMiddleware),
   asyncHandler(bookingsController.createBooking.bind(bookingsController))

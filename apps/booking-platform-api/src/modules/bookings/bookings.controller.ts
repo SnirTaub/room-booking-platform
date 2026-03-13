@@ -17,18 +17,14 @@ export class BookingsController {
     const booking = await bookingsService.createBooking(user.userId, body);
 
     if (res.locals.idempotency) {
-      await redisClient.set(
-        res.locals.idempotency.redisKey,
+      await redisClient.set(res.locals.idempotency.redisKey,
         JSON.stringify({
           requestHash: res.locals.idempotency.requestHash,
           response: {
             statusCode: HttpStatusCode.CREATED,
             body: booking,
           },
-        }),
-        {
-          EX: res.locals.idempotency.ttlInSeconds,
-        }
+        }), { EX: res.locals.idempotency.ttlInSeconds }
       );
     }
 
