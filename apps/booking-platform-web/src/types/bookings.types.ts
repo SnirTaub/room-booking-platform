@@ -1,10 +1,10 @@
-export interface CreateBookingRequestDto {
+export interface CreateBookingRequest {
   roomId: number;
   startTime: string;
   endTime: string;
 }
 
-export interface BookingResponseDto {
+export interface BookingResponse {
   id: number;
   roomId: number;
   userId: number;

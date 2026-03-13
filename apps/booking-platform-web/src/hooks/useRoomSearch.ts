@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { searchRooms } from "../api/rooms.api";
 import { createBooking } from "../api/bookings.api";
 import { getFriendlyErrorMessage } from "../utils/errorMessages";
-import type { RoomSearchItemDto } from "../types/rooms.types";
+import type { RoomSearchItem } from "../types/rooms.types";
 
 export interface AmenityOption {
   code: string;
@@ -36,7 +36,7 @@ export function useRoomSearch() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [rooms, setRooms] = useState<RoomSearchItemDto[]>([]);
+  const [rooms, setRooms] = useState<RoomSearchItem[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [page, setPage] = useState(1);

@@ -1,15 +1,15 @@
-export interface RegisterRequestDto {
+export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
 }
 
-export interface LoginRequestDto {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface RegisterResponseDto {
+export interface RegisterResponse {
   user: {
     id: number;
     email: string;
@@ -18,7 +18,7 @@ export interface RegisterResponseDto {
   accessToken: string;
 }
 
-export interface LoginResponseDto {
+export interface LoginResponse {
   accessToken: string;
 }
 

@@ -1,36 +1,35 @@
-import { HttpStatusCode } from "../../config/constants";
+import { HttpStatusCode, ROOMS_SEARCH_CACHE_PREFIX, SEARCH_CACHE_TTL_SECONDS } from "../../config/constants";
 import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions";
-import { RoomDetailsDto, RoomSearchItemDto, RoomSearchRow, SearchRoomsQueryDto, SearchRoomsResponseDto } from "./rooms.types";
+import { getFromCache, setInCache } from "../../infrastructure/redis/redis";
+import { RoomDetails, RoomSearchItem, RoomSearchRow, SearchRoomsQuery, SearchRoomsResponse } from "./rooms.types";
 import { roomsProvider } from "./rooms.provider";
-
-const SEARCH_CACHE_TTL_SECONDS = 60;
 
 export class RoomsService {
   constructor(private readonly provider = roomsProvider) {}
 
-  public async searchRooms(query: SearchRoomsQueryDto): Promise<SearchRoomsResponseDto> {
+  public async searchRooms(query: SearchRoomsQuery): Promise<SearchRoomsResponse> {
     const cacheKey = this.buildSearchCacheKey(query);
 
-    const cached = await this.provider.getCachedSearch(cacheKey);
+    const cached = await getFromCache<SearchRoomsResponse>(cacheKey);
     if (cached) {
       return cached;
     }
 
     const { rows, total } = await this.provider.searchRooms(query);
 
-    const response: SearchRoomsResponseDto = {
+    const response: SearchRoomsResponse = {
       items: rows.map((row) => this.mapRowToSearchItem(row)),
       page: query.page,
       limit: query.limit,
       total,
     };
 
-    await this.provider.setCachedSearch(cacheKey, response, SEARCH_CACHE_TTL_SECONDS);
+    await setInCache(cacheKey, response, SEARCH_CACHE_TTL_SECONDS);
 
     return response;
   }
 
-  public async getRoomById(roomId: number): Promise<RoomDetailsDto> {
+  public async getRoomById(roomId: number): Promise<RoomDetails> {
     const room = await this.provider.getRoomById(roomId);
 
     if (!room) {
@@ -42,9 +41,9 @@ export class RoomsService {
     return this.mapRowToDetails(room);
   }
 
-  private buildSearchCacheKey(query: SearchRoomsQueryDto): string {
+  private buildSearchCacheKey(query: SearchRoomsQuery): string {
     const { location, capacity, startTime, endTime, amenities, page, limit } = query;
-    return `rooms:search:${JSON.stringify({
+    return `${ROOMS_SEARCH_CACHE_PREFIX}${JSON.stringify({
       location: location || null,
       capacity: capacity || null,
       startTime,
@@ -55,7 +54,7 @@ export class RoomsService {
     })}`;
   }
 
-  private mapRowToSearchItem(row: RoomSearchRow): RoomSearchItemDto {
+  private mapRowToSearchItem(row: RoomSearchRow): RoomSearchItem {
     return {
       id: Number(row.id),
       name: row.name,
@@ -66,7 +65,7 @@ export class RoomsService {
     };
   }
 
-  private mapRowToDetails(row: RoomSearchRow): RoomDetailsDto {
+  private mapRowToDetails(row: RoomSearchRow): RoomDetails {
     return {
       id: row.id,
       name: row.name,

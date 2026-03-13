@@ -1,7 +1,7 @@
-import type { RoomSearchItemDto } from "../../types/rooms.types";
+import type { RoomSearchItem } from "../../types/rooms.types";
 
 interface RoomsListProps {
-  rooms: RoomSearchItemDto[];
+  rooms: RoomSearchItem[];
   onBook: (roomId: number) => void;
 }
 

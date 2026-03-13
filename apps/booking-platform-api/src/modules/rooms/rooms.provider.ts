@@ -1,24 +1,9 @@
 import { QueryResult } from "pg";
 import { pgPool } from "../../infrastructure/db/pg";
-import { redisClient } from "../../infrastructure/redis/redis";
-import { RoomSearchRow, RoomStatus, SearchRoomsQueryDto, SearchRoomsResponseDto } from "./rooms.types";
-
-const SEARCH_CACHE_TTL_SECONDS = 60;
+import { RoomSearchRow, RoomStatus, SearchRoomsQuery } from "./rooms.types";
 
 export class RoomsProvider {
-  public async getCachedSearch(key: string): Promise<SearchRoomsResponseDto | null> {
-    const raw = await redisClient.get(key);
-    if (!raw) {
-      return null;
-    }
-    return JSON.parse(raw) as SearchRoomsResponseDto;
-  }
-
-  public async setCachedSearch(key: string, value: SearchRoomsResponseDto, ttlSeconds: number = SEARCH_CACHE_TTL_SECONDS): Promise<void> {
-    await redisClient.set(key, JSON.stringify(value), { EX: ttlSeconds });
-  }
-
-  public async searchRooms(query: SearchRoomsQueryDto): Promise<{ rows: RoomSearchRow[]; total: number }> {
+  public async searchRooms(query: SearchRoomsQuery): Promise<{ rows: RoomSearchRow[]; total: number }> {
     const params = [
       RoomStatus.ACTIVE,                                                   // $1
       query.location || null,                                              // $2
@@ -105,7 +90,7 @@ export class RoomsProvider {
       `,
       [roomId]
     );
-    return result.rows[0] ?? null;
+    return result.rows[0] || null;
   }
 }
 

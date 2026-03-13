@@ -1,14 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
 import { createAppError, ErrorCodes } from "../errors/errorDefinitions";
-import { redisClient } from "../../infrastructure/redis/redis";
+import { getFromCache } from "../../infrastructure/redis/redis";
+import { IDEMPOTENCY_BOOKING_PREFIX, IDEMPOTENCY_TTL_IN_SECONDS } from "../../config/constants";
 
 interface IdempotencyRecord {
   statusCode: number;
   body: unknown;
 }
-
-const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10 // 10 minutes;
 
 function hashRequestBody(body: unknown): string {
   return crypto.createHash("sha256").update(JSON.stringify(body || {})).digest("hex");
@@ -28,17 +27,15 @@ export async function bookingIdempotencyMiddleware(req: Request, res: Response, 
   }
 
   const requestHash: string = hashRequestBody(req.body);
-  const redisKey: string = `idempotency:booking:${userId}:${idempotencyKeyHeader}`;
-  const existingRecordRaw: string | null = await redisClient.get(redisKey);
+  const redisKey: string = `${IDEMPOTENCY_BOOKING_PREFIX}${userId}:${idempotencyKeyHeader}`;
+  const existingRecord = await getFromCache<{ requestHash: string; response: IdempotencyRecord }>(redisKey);
 
-  if (existingRecordRaw) {
-    const parsedRecord: { requestHash: string; response: IdempotencyRecord } = JSON.parse(existingRecordRaw);
-
-    if (parsedRecord.requestHash !== requestHash) {
+  if (existingRecord) {
+    if (existingRecord.requestHash !== requestHash) {
       throw createAppError(ErrorCodes.IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD);
     }
 
-    res.status(parsedRecord.response.statusCode).json(parsedRecord.response.body);
+    res.status(existingRecord.response.statusCode).json(existingRecord.response.body);
     return;
   }
 

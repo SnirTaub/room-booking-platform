@@ -3,13 +3,13 @@ export enum BookingStatus {
   CANCELLED = "CANCELLED"
 }
 
-export interface CreateBookingDto {
+export interface CreateBooking {
   roomId: number
   startTime: string
   endTime: string
 }
 
-export interface BookingResponseDto {
+export interface BookingResponse {
   id: number
   roomId: number
   userId: number

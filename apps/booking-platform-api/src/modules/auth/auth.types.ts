@@ -1,26 +1,26 @@
-export interface RegisterRequestDto {
+export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
 }
 
-export interface LoginRequestDto {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface AuthenticatedUserDto {
+export interface AuthenticatedUser {
   id: number;
   email: string;
   fullName: string;
 }
 
-export interface RegisterResponseDto {
-  user: AuthenticatedUserDto;
+export interface RegisterResponse {
+  user: AuthenticatedUser;
   accessToken: string;
 }
 
-export interface LoginResponseDto {
+export interface LoginResponse {
   accessToken: string;
 }
 

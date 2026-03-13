@@ -8,7 +8,7 @@ export interface SearchRoomsQuery {
   limit?: number;
 }
 
-export interface RoomSearchItemDto {
+export interface RoomSearchItem {
   id: number;
   name: string;
   location: string;
@@ -17,8 +17,8 @@ export interface RoomSearchItemDto {
   isAvailable: boolean;
 }
 
-export interface SearchRoomsResponseDto {
-  items: RoomSearchItemDto[];
+export interface SearchRoomsResponse {
+  items: RoomSearchItem[];
   page: number;
   limit: number;
   total: number;

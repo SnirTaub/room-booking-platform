@@ -1,6 +1,6 @@
 import { PoolClient, QueryResult } from "pg";
 import { pgPool } from "../../infrastructure/db/pg";
-import { BookingStatus, CreateBookingDto, BookingResponseDto } from "./bookings.types";
+import { BookingStatus, CreateBooking, BookingResponse } from "./bookings.types";
 import { RoomStatus } from "../rooms/rooms.types";
 
 export class BookingsProvider {
@@ -49,14 +49,14 @@ export class BookingsProvider {
     return (result.rowCount || 0) > 0;
   }
 
-  public async insertBooking(client: PoolClient, userId: number, dto: CreateBookingDto): Promise<BookingResponseDto> {
+  public async insertBooking(client: PoolClient, userId: number, booking: CreateBooking): Promise<BookingResponse> {
     const result: QueryResult = await client.query(
       `
       INSERT INTO bookings (user_id, room_id, start_time, end_time, status)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, user_id, room_id, start_time, end_time, status
       `,
-      [userId, dto.roomId, dto.startTime, dto.endTime, BookingStatus.CONFIRMED]
+      [userId, booking.roomId, booking.startTime, booking.endTime, BookingStatus.CONFIRMED]
     );
 
     const row = result.rows[0];

@@ -1,14 +1,14 @@
 import { HttpStatusCode } from "../../config/constants";
 import { hashPassword, comparePassword } from "../../common/utils/password";
 import { signAccessToken } from "../../common/utils/jwt";
-import { LoginRequestDto, LoginResponseDto, RegisterRequestDto, RegisterResponseDto, UserRow } from "./auth.types";
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UserRow } from "./auth.types";
 import { authProvider, AuthProvider } from "./auth.provider";
 import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions";
 
 export class AuthService {
   constructor(private readonly provider: AuthProvider = authProvider) {}
 
-  public async register(payload: RegisterRequestDto): Promise<RegisterResponseDto> {
+  public async register(payload: RegisterRequest): Promise<RegisterResponse> {
     const existingUser: UserRow | null = await this.provider.findUserByEmail(payload.email);
 
     if (existingUser) {
@@ -38,7 +38,7 @@ export class AuthService {
     };
   }
 
-  public async login(payload: LoginRequestDto): Promise<LoginResponseDto> {
+  public async login(payload: LoginRequest): Promise<LoginResponse> {
     const user: UserRow | null = await this.provider.findUserByEmail(payload.email);
 
     if (!user) {

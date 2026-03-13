@@ -9,3 +9,16 @@ export enum HttpStatusCode {
   TOO_MANY_REQUESTS = 429,
   INTERNAL_SERVER_ERROR = 500,
 }
+
+export const SEARCH_CACHE_TTL_SECONDS = 60;
+
+export const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10; // 10 minutes
+
+export const ROOMS_SEARCH_CACHE_PREFIX = "rooms:search:";
+
+export const RATE_LIMIT_AUTH_REGISTER_PREFIX = "rate-limit:auth:register";
+export const RATE_LIMIT_AUTH_LOGIN_PREFIX = "rate-limit:auth:login";
+export const RATE_LIMIT_ROOMS_SEARCH_PREFIX = "rate-limit:rooms:search";
+export const RATE_LIMIT_BOOKINGS_CREATE_PREFIX = "rate-limit:bookings:create";
+
+export const IDEMPOTENCY_BOOKING_PREFIX = "idempotency:booking:";
