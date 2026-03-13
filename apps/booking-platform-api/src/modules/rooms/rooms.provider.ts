@@ -39,7 +39,7 @@ export class RoomsProvider {
       FROM rooms r
       LEFT JOIN room_amenities ra ON ra.room_id = r.id
       WHERE r.status = $1
-        AND ($2::text IS NULL OR r.location = $2::text)
+        AND ($2::text IS NULL OR LOWER(r.location) = LOWER($2::text))
         AND ($3::int IS NULL OR r.capacity >= $3::int)
         AND (
           $4::text[] IS NULL OR NOT EXISTS (
