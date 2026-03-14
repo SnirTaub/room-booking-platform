@@ -16,7 +16,7 @@ You can:
 
 ## 1. How to run it locally
 
-### 1.1. Backend (API)
+### 1.1. Backend (NodeJS)
 
 From the repo root:
 
