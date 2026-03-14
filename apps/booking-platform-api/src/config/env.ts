@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { CORS_ORIGIN_REGEX } from "./constants";
+import { parseCorsOrigins } from "./parseCorsOrigins";
 
 dotenv.config();
 
@@ -22,10 +22,6 @@ function getNumberEnv(name: string): number {
   }
 
   return parsedValue;
-}
-
-function parseCorsOrigins(raw: string): string[] {
-  return raw.split(",").map((origin) => origin.trim().replace(CORS_ORIGIN_REGEX, "")).filter(Boolean);
 }
 
 export const env = {

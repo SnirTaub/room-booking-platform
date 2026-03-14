@@ -2,12 +2,14 @@
   "name": "booking-platform-api",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
-    "dev": "nodemon --watch src -e ts --exec \"npm run build && node dist/server.js\"",
-    "debug": "npm run build && node --inspect dist/server.js",
+    "dev": "nodemon --watch src -e ts --exec \"npm run build && node dist/src/server.js\"",
+    "debug": "npm run build && node --inspect dist/src/server.js",
     "build": "tsc",
-    "start": "npm run build && node dist/server.js"
+    "start": "npm run build && node dist/src/server.js",
+    "test": "npm run build && node run-tests.cjs",
+    "test:watch": "nodemon --watch src --watch tests -e ts -x \"npm run test\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -29,7 +31,13 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^24.3.0",
     "@types/pg": "^8.18.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^10.0.0",
+    "@types/sinon": "^17.0.0",
+    "chai": "^4.5.0",
+    "mocha": "^9.2.2",
     "nodemon": "^3.1.0",
+    "sinon": "^17.0.0",
     "typescript": "^5.9.2"
   }
 }
