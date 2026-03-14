@@ -115,13 +115,9 @@ export function useRoomSearch() {
       const { startIso, endIso } = dates;
 
       try {
-        const result = await createBooking({
-          roomId,
-          startTime: startIso,
-          endTime: endIso,
-        });
+        await createBooking({ roomId, startTime: startIso, endTime: endIso });
 
-        setSuccess(`Booking ${result.id} created successfully`);
+        setSuccess("Booking created successfully");
 
         await fetchRooms(page);
       } catch (err: any) {
