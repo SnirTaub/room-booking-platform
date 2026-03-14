@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { createAppError, ErrorCodes } from "../errors/errorDefinitions";
 import { getFromCache } from "../../infrastructure/redis/redis";
 import { IDEMPOTENCY_BOOKING_PREFIX, IDEMPOTENCY_TTL_IN_SECONDS } from "../../config/constants";
+import { MAX_IDEMPOTENCY_KEY_LENGTH } from "../../config/constants";
 
 interface IdempotencyRecord {
   statusCode: number;
@@ -18,6 +19,10 @@ export async function bookingIdempotencyMiddleware(req: Request, res: Response, 
 
   if (!idempotencyKeyHeader) {
     throw createAppError(ErrorCodes.MISSING_IDEMPOTENCY_KEY);
+  }
+
+  if (idempotencyKeyHeader.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
+    throw createAppError(ErrorCodes.VALIDATION_ERROR, { message: "Idempotency-Key must be at most 128 characters" });
   }
 
   const userId: number | undefined = req.user?.userId;

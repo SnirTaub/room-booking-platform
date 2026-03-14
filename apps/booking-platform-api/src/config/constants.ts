@@ -13,6 +13,7 @@ export enum HttpStatusCode {
 export const SEARCH_CACHE_TTL_SECONDS = 60;
 
 export const IDEMPOTENCY_TTL_IN_SECONDS = 60 * 10; // 10 minutes
+export const MAX_IDEMPOTENCY_KEY_LENGTH = 128;
 
 export const ROOMS_SEARCH_CACHE_PREFIX = "rooms:search:";
 
@@ -22,3 +23,6 @@ export const RATE_LIMIT_ROOMS_SEARCH_PREFIX = "rate-limit:rooms:search";
 export const RATE_LIMIT_BOOKINGS_CREATE_PREFIX = "rate-limit:bookings:create";
 
 export const IDEMPOTENCY_BOOKING_PREFIX = "idempotency:booking:";
+
+// Removes brackets and quotes from the start and end of each CORS origin string.
+export const CORS_ORIGIN_REGEX = /^["\[\]]+|["\[\]]+$/g;

@@ -5,12 +5,7 @@ interface PaginationControlsProps {
   onPageChange: (page: number) => void;
 }
 
-export function PaginationControls({
-  page,
-  total,
-  pageSize,
-  onPageChange,
-}: PaginationControlsProps) {
+export function PaginationControls({ page, total, pageSize, onPageChange }: PaginationControlsProps) {
   if (total <= 0) {
     return null;
   }

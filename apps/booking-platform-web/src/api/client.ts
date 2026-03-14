@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
-import { getAccessToken } from "../utils/storage";
+import { getAccessToken, removeAccessToken, removeUserEmail, removeUserDisplayName } from "../utils/storage";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -18,5 +18,18 @@ apiClient.interceptors.request.use((config) => {
 
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      removeAccessToken();
+      removeUserEmail();
+      removeUserDisplayName();
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export { apiClient };

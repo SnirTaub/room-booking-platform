@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { CORS_ORIGIN_REGEX } from "./constants";
 
 dotenv.config();
 
@@ -23,9 +24,15 @@ function getNumberEnv(name: string): number {
   return parsedValue;
 }
 
+function parseCorsOrigins(raw: string): string[] {
+  return raw.split(",").map((origin) => origin.trim().replace(CORS_ORIGIN_REGEX, "")).filter(Boolean);
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: getNumberEnv("PORT"),
+
+  corsOrigin: parseCorsOrigins(getEnv("CORS_ORIGIN").trim()),
 
   database: {
     host: getEnv("DATABASE_HOST"),

@@ -7,6 +7,7 @@ import { notFoundMiddleware } from "./common/middleware/notFound.middleware";
 import { errorMiddleware } from "./common/middleware/error.middleware";
 import { authMiddleware } from "./common/middleware/auth.middleware";
 import { HttpStatusCode } from "./config/constants";
+import { env } from "./config/env";
 import { authRouter } from "./modules/auth/auth.routes";
 import { roomsRouter } from "./modules/rooms/rooms.routes";
 import { bookingsRouter } from "./modules/bookings/bookings.routes";
@@ -15,7 +16,7 @@ export function createApp(): Express {
   const app: Express = express();
 
   app.use(helmet());
-  app.use(cors());
+  app.use(cors({ origin: env.corsOrigin }));
   app.use(express.json());
   app.use(morgan("dev"));
   app.use(correlationIdMiddleware);
