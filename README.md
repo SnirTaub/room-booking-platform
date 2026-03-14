@@ -40,6 +40,8 @@ REDIS_URL=redis://localhost:6379
 
 JWT_SECRET=change-me
 JWT_EXPIRES_IN=1d
+
+CORS_ORIGIN=[http://localhost:5173]
 ```
 
 #### Set up the database once

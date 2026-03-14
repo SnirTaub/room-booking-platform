@@ -22,7 +22,7 @@ export async function bookingIdempotencyMiddleware(req: Request, res: Response, 
   }
 
   if (idempotencyKeyHeader.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
-    throw createAppError(ErrorCodes.VALIDATION_ERROR, { message: "Idempotency-Key must be at most 128 characters" });
+    throw createAppError(ErrorCodes.IDEMPOTENCY_KEY_INVALID_LENGTH);
   }
 
   const userId: number | undefined = req.user?.userId;

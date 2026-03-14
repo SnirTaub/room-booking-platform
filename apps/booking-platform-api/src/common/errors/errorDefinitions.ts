@@ -52,6 +52,11 @@ export const ErrorDefinitions = {
     statusCode: HttpStatusCode.CONFLICT,
     message: "This Idempotency-Key was already used with a different request payload",
   },
+  IDEMPOTENCY_KEY_INVALID_LENGTH: {
+    code: "IDEMPOTENCY_KEY_INVALID_LENGTH",
+    statusCode: HttpStatusCode.BAD_REQUEST,
+    message: "Idempotency-Key must be at most 128 characters",
+  },
   ROOM_NOT_FOUND: {
     code: "ROOM_NOT_FOUND",
     statusCode: HttpStatusCode.NOT_FOUND,
@@ -90,6 +95,7 @@ export const ErrorCodes = {
   MISSING_IDEMPOTENCY_KEY: ErrorDefinitions.MISSING_IDEMPOTENCY_KEY.code,
   UNAUTHORIZED: ErrorDefinitions.UNAUTHORIZED.code,
   IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD: ErrorDefinitions.IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD.code,
+  IDEMPOTENCY_KEY_INVALID_LENGTH: ErrorDefinitions.IDEMPOTENCY_KEY_INVALID_LENGTH.code,
   ROOM_NOT_FOUND: ErrorDefinitions.ROOM_NOT_FOUND.code,
   ROOM_ALREADY_BOOKED: ErrorDefinitions.ROOM_ALREADY_BOOKED.code,
   EMAIL_ALREADY_EXISTS: ErrorDefinitions.EMAIL_ALREADY_EXISTS.code,
