@@ -62,7 +62,7 @@ This will:
 
 ```bash
 cd apps/booking-platform-api
-npm run dev
+npm start
 ```
 
 The API runs on `http://localhost:3001`.
@@ -96,7 +96,7 @@ Run the dev server:
 
 ```bash
 cd apps/booking-platform-web
-npm run dev
+npm start
 ```
 
 Vite usually runs on `http://localhost:5173`.
