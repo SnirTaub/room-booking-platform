@@ -21,8 +21,29 @@ export const RATE_LIMIT_AUTH_REGISTER_PREFIX = "rate-limit:auth:register";
 export const RATE_LIMIT_AUTH_LOGIN_PREFIX = "rate-limit:auth:login";
 export const RATE_LIMIT_ROOMS_SEARCH_PREFIX = "rate-limit:rooms:search";
 export const RATE_LIMIT_BOOKINGS_CREATE_PREFIX = "rate-limit:bookings:create";
+export const RATE_LIMIT_AI_ROOM_SEARCH_INTENT_PREFIX = "rate-limit:ai:room-search-intent";
 
 export const IDEMPOTENCY_BOOKING_PREFIX = "idempotency:booking:";
 
 // Removes brackets and quotes from the start and end of each CORS origin string.
 export const CORS_ORIGIN_REGEX = /^["\[\]]+|["\[\]]+$/g;
+
+export const SUPPORTED_ROOM_LOCATIONS = [
+  "Tel Aviv",
+  "Jerusalem",
+  "Haifa",
+  "Ramat Gan",
+  "Beer Sheva",
+  "Netanya",
+  "Eilat",
+] as const;
+
+export const SUPPORTED_ROOM_AMENITIES = [
+  "WIFI",
+  "AIR_CONDITIONING",
+  "KITCHEN",
+  "WASHING_MACHINE",
+  "PARKING",
+  "POOL",
+  "PET_FRIENDLY",
+] as const;

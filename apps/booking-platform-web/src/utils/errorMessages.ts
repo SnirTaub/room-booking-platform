@@ -1,4 +1,4 @@
-type ErrorContext = "login" | "register" | "search" | "booking";
+type ErrorContext = "login" | "register" | "search" | "booking" | "ai";
 
 interface ApiErrorPayload {
   error?: {
@@ -35,7 +35,14 @@ export function getFriendlyErrorMessage(err: unknown, context: ErrorContext): st
       return "We couldn't find that room. It may have been removed.";
     case "RATE_LIMIT_EXCEEDED":
       return "Too many requests. Please wait a bit and try again.";
+    case "AI_INVALID_RESPONSE":
+      return "I couldn't turn that into a valid search. Try adding a city, guests, and dates.";
+    case "AI_PROVIDER_ERROR":
+      return "AI search is unavailable right now. Please try again in a moment.";
     case "VALIDATION_ERROR":
+      if (context === "ai") {
+        return "Please enter a longer search request.";
+      }
       if (context === "search") {
         return "Some of the search parameters are invalid. Please check them and try again.";
       }
@@ -58,5 +65,7 @@ function defaultMessageForContext(context: ErrorContext): string {
       return "We couldn't run this search. Please try again.";
     case "booking":
       return "We couldn't create this booking. Please try again.";
+    case "ai":
+      return "We couldn't understand that search. Please try again.";
   }
 }

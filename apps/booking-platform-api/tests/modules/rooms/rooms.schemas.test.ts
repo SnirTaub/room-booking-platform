@@ -3,6 +3,7 @@ import {
   searchRoomsSchema,
   roomIdParamsSchema,
 } from "../../../src/modules/rooms/rooms.schemas";
+import { CapacitySearchMode } from "../../../src/modules/rooms/rooms.types";
 
 describe("rooms schemas", () => {
   describe("searchRoomsSchema", () => {
@@ -15,6 +16,22 @@ describe("rooms schemas", () => {
       if (result.success) {
         expect(result.data.page).to.equal(1);
         expect(result.data.limit).to.equal(20);
+        expect(result.data.capacityMode).to.equal(CapacitySearchMode.EXACT);
+      }
+    });
+
+    it("accepts exact capacity search mode", () => {
+      const result = searchRoomsSchema.safeParse({
+        startTime: "2025-06-01T14:00:00Z",
+        endTime: "2025-06-03T11:00:00Z",
+        capacity: "2",
+        capacityMode: "EXACT",
+      });
+
+      expect(result.success).to.equal(true);
+      if (result.success) {
+        expect(result.data.capacity).to.equal(2);
+        expect(result.data.capacityMode).to.equal(CapacitySearchMode.EXACT);
       }
     });
 

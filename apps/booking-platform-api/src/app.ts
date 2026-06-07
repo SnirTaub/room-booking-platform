@@ -11,6 +11,7 @@ import { env } from "./config/env";
 import { authRouter } from "./modules/auth/auth.routes";
 import { roomsRouter } from "./modules/rooms/rooms.routes";
 import { bookingsRouter } from "./modules/bookings/bookings.routes";
+import { aiRouter } from "./modules/ai/ai.routes";
 
 export function createApp(): Express {
   const app: Express = express();
@@ -26,6 +27,7 @@ export function createApp(): Express {
   });
 
   app.use("/v1/auth", authRouter);
+  app.use("/v1/ai", aiRouter);
   app.use("/v1/rooms", roomsRouter);
   app.use("/v1/bookings", bookingsRouter);
 

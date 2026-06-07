@@ -1,7 +1,7 @@
 import { HttpStatusCode, ROOMS_SEARCH_CACHE_PREFIX, SEARCH_CACHE_TTL_SECONDS } from "../../config/constants";
 import { createAppError, ErrorCodes } from "../../common/errors/errorDefinitions";
 import { getFromCache, setInCache } from "../../infrastructure/redis/redis";
-import { RoomDetails, RoomSearchItem, RoomSearchRow, SearchRoomsQuery, SearchRoomsResponse } from "./rooms.types";
+import { CapacitySearchMode, RoomDetails, RoomSearchItem, RoomSearchRow, SearchRoomsQuery, SearchRoomsResponse } from "./rooms.types";
 import { roomsProvider } from "./rooms.provider";
 import { logger } from "../../common/utils/logger";
 
@@ -11,7 +11,7 @@ export class RoomsService {
   public async searchRooms(correlationId: string, query: SearchRoomsQuery): Promise<SearchRoomsResponse> {
     const methodName = "RoomsService/searchRooms";
 
-    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
+    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, capacityMode: query.capacityMode, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
 
     const cacheKey = this.buildSearchCacheKey(query);
 
@@ -60,10 +60,11 @@ export class RoomsService {
   }
 
   private buildSearchCacheKey(query: SearchRoomsQuery): string {
-    const { location, capacity, startTime, endTime, amenities, page, limit } = query;
+    const { location, capacity, capacityMode, startTime, endTime, amenities, page, limit } = query;
     return `${ROOMS_SEARCH_CACHE_PREFIX}${JSON.stringify({
       location: location || null,
       capacity: capacity || null,
+      capacityMode: capacityMode || CapacitySearchMode.EXACT,
       startTime,
       endTime,
       amenities: amenities || [],

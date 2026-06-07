@@ -2,12 +2,17 @@ import type { FormEvent } from "react";
 import type { AmenityOption } from "../../hooks/useRoomSearch";
 
 interface RoomsFiltersProps {
+  aiPrompt: string;
+  isAiLoading: boolean;
+  aiMessage: string;
   location: string;
   capacity: string;
   checkIn: string;
   checkOut: string;
   selectedAmenities: string[];
   amenities: AmenityOption[];
+  onAiPromptChange: (value: string) => void;
+  onAiPromptSubmit: () => void;
   onLocationChange: (value: string) => void;
   onCapacityChange: (value: string) => void;
   onCheckInChange: (value: string) => void;
@@ -26,6 +31,11 @@ export function RoomsFilters(props: RoomsFiltersProps) {
     checkOut,
     selectedAmenities,
     amenities,
+    aiPrompt,
+    isAiLoading,
+    aiMessage,
+    onAiPromptChange,
+    onAiPromptSubmit,
     onLocationChange,
     onCapacityChange,
     onCheckInChange,
@@ -39,6 +49,30 @@ export function RoomsFilters(props: RoomsFiltersProps) {
   return (
     <div className="card">
       <form onSubmit={onSubmit} className="card-form">
+        <div className="ai-search-box">
+          <div className="form-field">
+            <label className="form-label">AI search</label>
+            <textarea
+              className="input textarea"
+              value={aiPrompt}
+              onChange={(e) => onAiPromptChange(e.target.value)}
+              placeholder="Tel Aviv for 3 guests with parking and wifi next weekend"
+              rows={3}
+            />
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onAiPromptSubmit}
+            disabled={isAiLoading}
+          >
+            {isAiLoading ? "Searching..." : "Search with AI"}
+          </button>
+
+          {aiMessage && <p className="text-success">{aiMessage}</p>}
+        </div>
+
         <div className="form-field">
           <label className="form-label">Destination (city)</label>
           <input

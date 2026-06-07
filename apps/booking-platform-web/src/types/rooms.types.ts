@@ -1,6 +1,7 @@
 export interface SearchRoomsQuery {
   location?: string;
   capacity?: number;
+  capacityMode?: "AT_LEAST" | "EXACT";
   startTime: string;
   endTime: string;
   amenities?: string;

@@ -1,22 +1,23 @@
 import { QueryResult } from "pg";
 import { pgPool } from "../../infrastructure/db/pg";
-import { RoomSearchRow, RoomStatus, SearchRoomsQuery } from "./rooms.types";
+import { CapacitySearchMode, RoomSearchRow, RoomStatus, SearchRoomsQuery } from "./rooms.types";
 import { logger } from "../../common/utils/logger";
 
 export class RoomsProvider {
   public async searchRooms(correlationId: string, query: SearchRoomsQuery): Promise<{ rows: RoomSearchRow[]; total: number }> {
     const methodName = "RoomsProvider/searchRooms";
-    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
+    logger.info(correlationId, `${methodName} - start - input parameters`, { location: query.location, capacity: query.capacity, capacityMode: query.capacityMode, startTime: query.startTime, endTime: query.endTime, amenitiesCount: query.amenities?.length ?? 0, page: query.page, limit: query.limit });
 
     const params = [
       RoomStatus.ACTIVE,                                                   // $1
       query.location || null,                                              // $2
       query.capacity || null,                                              // $3
-      (query.amenities && query.amenities.length > 0 && query.amenities) || null, // $4
-      query.startTime,                                                     // $5
-      query.endTime,                                                       // $6
-      query.limit,                                                         // $7
-      (query.page - 1) * query.limit                                       // $8
+      query.capacityMode,                                                  // $4
+      (query.amenities && query.amenities.length > 0 && query.amenities) || null, // $5
+      query.startTime,                                                     // $6
+      query.endTime,                                                       // $7
+      query.limit,                                                         // $8
+      (query.page - 1) * query.limit                                       // $9
     ];
 
     const sql = `
@@ -32,19 +33,23 @@ export class RoomsProvider {
           FROM bookings b
           WHERE b.room_id = r.id
             AND b.status = 'CONFIRMED'
-            AND b.start_time < $6::timestamptz
-            AND b.end_time   > $5::timestamptz
+            AND b.start_time < $7::timestamptz
+            AND b.end_time   > $6::timestamptz
         ) AS is_available,
         COUNT(*) OVER() AS total_count
       FROM rooms r
       LEFT JOIN room_amenities ra ON ra.room_id = r.id
       WHERE r.status = $1
         AND ($2::text IS NULL OR LOWER(r.location) = LOWER($2::text))
-        AND ($3::int IS NULL OR r.capacity >= $3::int)
         AND (
-          $4::text[] IS NULL OR NOT EXISTS (
+          $3::int IS NULL
+          OR ($4::text = '${CapacitySearchMode.EXACT}' AND r.capacity = $3::int)
+          OR ($4::text = '${CapacitySearchMode.AT_LEAST}' AND r.capacity >= $3::int)
+        )
+        AND (
+          $5::text[] IS NULL OR NOT EXISTS (
             SELECT 1
-            FROM unnest($4::text[]) AS required_amenity
+            FROM unnest($5::text[]) AS required_amenity
             WHERE required_amenity NOT IN (
               SELECT ra2.amenity
               FROM room_amenities ra2
@@ -54,8 +59,8 @@ export class RoomsProvider {
         )
       GROUP BY r.id, r.name, r.location, r.capacity, r.status
       ORDER BY r.id
-      LIMIT $7::int
-      OFFSET $8::int
+      LIMIT $8::int
+      OFFSET $9::int
     `;
 
     const result: QueryResult<RoomSearchRow & { total_count: string }> = await pgPool.query(sql, params);

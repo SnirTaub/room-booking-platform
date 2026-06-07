@@ -24,6 +24,11 @@ function getNumberEnv(name: string): number {
   return parsedValue;
 }
 
+function getOptionalEnv(name: string): string | undefined {
+  const value: string | undefined = process.env[name]?.trim();
+  return value || undefined;
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: getNumberEnv("PORT"),
@@ -43,5 +48,10 @@ export const env = {
   jwt: {
     secret: getEnv("JWT_SECRET"),
     expiresIn: getEnv("JWT_EXPIRES_IN"),
+  },
+
+  ai: {
+    openAiApiKey: getEnv("OPENAI_API_KEY"),
+    openAiModel: getOptionalEnv("OPENAI_MODEL") || "gpt-5-nano",
   },
 } as const;

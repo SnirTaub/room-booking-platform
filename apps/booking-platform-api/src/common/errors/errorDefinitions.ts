@@ -82,6 +82,16 @@ export const ErrorDefinitions = {
     statusCode: HttpStatusCode.UNAUTHORIZED,
     message: "Invalid email or password",
   },
+  AI_PROVIDER_ERROR: {
+    code: "AI_PROVIDER_ERROR",
+    statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+    message: "AI provider failed to process the request",
+  },
+  AI_INVALID_RESPONSE: {
+    code: "AI_INVALID_RESPONSE",
+    statusCode: HttpStatusCode.BAD_REQUEST,
+    message: "AI could not extract a valid room search",
+  },
 } as const;
 
 export const ErrorCodes = {
@@ -101,6 +111,8 @@ export const ErrorCodes = {
   EMAIL_ALREADY_EXISTS: ErrorDefinitions.EMAIL_ALREADY_EXISTS.code,
   USER_CREATION_FAILED: ErrorDefinitions.USER_CREATION_FAILED.code,
   INVALID_CREDENTIALS: ErrorDefinitions.INVALID_CREDENTIALS.code,
+  AI_PROVIDER_ERROR: ErrorDefinitions.AI_PROVIDER_ERROR.code,
+  AI_INVALID_RESPONSE: ErrorDefinitions.AI_INVALID_RESPONSE.code,
 } as const;
 
 export type ErrorCode = keyof typeof ErrorDefinitions;

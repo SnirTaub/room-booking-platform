@@ -4,9 +4,15 @@ export enum RoomStatus {
   MAINTENANCE = "MAINTENANCE",
 }
 
+export enum CapacitySearchMode {
+  AT_LEAST = "AT_LEAST",
+  EXACT = "EXACT",
+}
+
 export interface SearchRoomsQuery {
   location?: string;
   capacity?: number;
+  capacityMode: CapacitySearchMode;
   startTime: string;
   endTime: string;
   amenities?: string[];

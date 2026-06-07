@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { CapacitySearchMode } from "./rooms.types";
 
 export const searchRoomsSchema = z
   .object({
     location: z.string().trim().min(1).optional(),
     capacity: z.coerce.number().int().positive().optional(),
+    capacityMode: z.nativeEnum(CapacitySearchMode).default(CapacitySearchMode.EXACT),
     startTime: z.string().datetime(),
     endTime: z.string().datetime(),
     amenities: z
