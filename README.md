@@ -42,6 +42,10 @@ JWT_SECRET=change-me
 JWT_EXPIRES_IN=1d
 
 CORS_ORIGIN=[http://localhost:5173]
+
+# Required: enables AI-powered natural language search.
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_MODEL=gpt-5-nano
 ```
 
 #### Set up the database once
@@ -71,6 +75,7 @@ Main routes:
 
 - `POST /v1/auth/register`
 - `POST /v1/auth/login`
+- `POST /v1/ai/room-search-intent`
 - `GET /v1/rooms/search`
 - `GET /v1/rooms/:roomId`
 - `POST /v1/bookings`
@@ -102,4 +107,3 @@ npm start
 Vite usually runs on `http://localhost:5173`.
 
 ---
-
